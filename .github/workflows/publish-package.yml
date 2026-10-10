@@ -34,5 +34,25 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      - name: Read project version
+        run: |
+          VERSION=$(grep '^version=' gradle.properties | cut -d'=' -f2)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Check if version already published
+        id: check-published
+        run: |
+          METADATA_URL="https://maven.pkg.github.com/AbdulazizMirzakamilov/todo-app/org/example/todo-app/maven-metadata.xml"
+          HTTP_CODE=$(curl -s -o /tmp/maven-metadata.xml -w "%{http_code}" \
+            -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" "$METADATA_URL")
+          if [ "$HTTP_CODE" = "200" ] && grep -q "<version>${VERSION}</version>" /tmp/maven-metadata.xml; then
+            echo "Version ${VERSION} already published, skipping."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version ${VERSION} not published yet."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to GitHub Packages
+        if: steps.check-published.outputs.published == 'false'
         run: ./gradlew --no-daemon publish
