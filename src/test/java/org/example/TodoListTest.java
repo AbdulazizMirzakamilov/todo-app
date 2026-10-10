@@ -17,7 +17,7 @@ class TodoListTest {
         todoList.add("Buy milk");
 
         assertEquals(1, todoList.size());
-        assertEquals(List.of("Buy milk"), todoList.getAll());
+        assertEquals("Buy milk", todoList.getAll().get(0).getText());
     }
 
     @Test
@@ -26,7 +26,7 @@ class TodoListTest {
 
         todoList.add("   Buy milk   ");
 
-        assertEquals(List.of("Buy milk"), todoList.getAll());
+        assertEquals("Buy milk", todoList.getAll().get(0).getText());
     }
 
     @Test
@@ -66,7 +66,7 @@ class TodoListTest {
 
         assertTrue(removed);
         assertEquals(1, todoList.size());
-        assertEquals(List.of("Second"), todoList.getAll());
+        assertEquals("Second", todoList.getAll().get(0).getText());
     }
 
     @Test
@@ -95,6 +95,7 @@ class TodoListTest {
         assertTrue(todoList.getAll().isEmpty());
         assertFalse(todoList.remove(0));
         assertFalse(todoList.remove(-1));
+        assertFalse(todoList.markDone(0));
     }
 
     @Test
@@ -102,10 +103,108 @@ class TodoListTest {
         TodoList todoList = new TodoList();
         todoList.add("First");
 
-        List<String> copy = todoList.getAll();
-        copy.add("Injected");
+        List<Task> copy = todoList.getAll();
+        copy.add(new Task("Injected"));
 
-        assertEquals(List.of("First"), todoList.getAll());
+        assertEquals(List.of("First"),
+                todoList.getAll().stream().map(Task::getText).toList());
         assertEquals(1, todoList.size());
+    }
+
+    @Test
+    void clearRemovesAllTasks() {
+        TodoList todoList = new TodoList();
+        todoList.add("First");
+        todoList.add("Second");
+
+        todoList.clear();
+
+        assertEquals(0, todoList.size());
+        assertTrue(todoList.getAll().isEmpty());
+    }
+
+    @Test
+    void clearOnEmptyListLeavesItEmpty() {
+        TodoList todoList = new TodoList();
+
+        todoList.clear();
+
+        assertEquals(0, todoList.size());
+        assertTrue(todoList.getAll().isEmpty());
+    }
+
+    @Test
+    void markDoneMarksTaskAtValidIndex() {
+        TodoList todoList = new TodoList();
+        todoList.add("First");
+        todoList.add("Second");
+
+        boolean marked = todoList.markDone(1);
+
+        assertTrue(marked);
+        assertFalse(todoList.getAll().get(0).isDone());
+        assertTrue(todoList.getAll().get(1).isDone());
+    }
+
+    @Test
+    void markDoneWithNegativeIndexReturnsFalse() {
+        TodoList todoList = new TodoList();
+        todoList.add("First");
+
+        assertFalse(todoList.markDone(-1));
+        assertFalse(todoList.getAll().get(0).isDone());
+    }
+
+    @Test
+    void markDoneWithIndexOutOfBoundsReturnsFalse() {
+        TodoList todoList = new TodoList();
+        todoList.add("First");
+
+        assertFalse(todoList.markDone(1));
+        assertFalse(todoList.getAll().get(0).isDone());
+    }
+
+    @Test
+    void searchFindsTasksCaseInsensitively() {
+        TodoList todoList = new TodoList();
+        todoList.add("Buy milk");
+        todoList.add("Walk the dog");
+        todoList.add("MilK shake");
+
+        List<Task> results = todoList.search("milk");
+
+        assertEquals(2, results.size());
+        assertEquals(List.of("Buy milk", "MilK shake"),
+                results.stream().map(Task::getText).toList());
+    }
+
+    @Test
+    void searchReturnsEmptyListWhenNoMatch() {
+        TodoList todoList = new TodoList();
+        todoList.add("Buy milk");
+
+        List<Task> results = todoList.search("shopping");
+
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void searchWithEmptyStringReturnsEmptyList() {
+        TodoList todoList = new TodoList();
+        todoList.add("Buy milk");
+
+        List<Task> results = todoList.search("");
+
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void searchWithWhitespaceQueryReturnsEmptyList() {
+        TodoList todoList = new TodoList();
+        todoList.add("Buy milk");
+
+        List<Task> results = todoList.search("   ");
+
+        assertTrue(results.isEmpty());
     }
 }

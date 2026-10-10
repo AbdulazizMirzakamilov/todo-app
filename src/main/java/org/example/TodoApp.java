@@ -9,7 +9,7 @@ public class TodoApp {
         TodoList todoList = new TodoList();
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Commands: add <task>, remove <index>, list, exit");
+        System.out.println("Commands: add <task>, remove <index>, list, clear, done <index>, search <text>, exit");
 
         while (true) {
             System.out.print("> ");
@@ -65,12 +65,52 @@ public class TodoApp {
                     }
                 }
                 case "list" -> {
-                    List<String> tasks = todoList.getAll();
+                    List<Task> tasks = todoList.getAll();
                     if (tasks.isEmpty()) {
                         System.out.println("The list is empty.");
                     } else {
                         for (int i = 0; i < tasks.size(); i++) {
                             System.out.println((i + 1) + ". " + tasks.get(i));
+                        }
+                    }
+                }
+                case "clear" -> {
+                    todoList.clear();
+                    System.out.println("All tasks removed.");
+                }
+                case "done" -> {
+                    if (argument.isEmpty()) {
+                        System.out.println("Usage: done <index>");
+                        continue;
+                    }
+                    int index;
+                    try {
+                        index = Integer.parseInt(argument);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Index must be a number.");
+                        continue;
+                    }
+                    if (index < 1) {
+                        System.out.println("Index must be 1 or greater.");
+                        continue;
+                    }
+                    if (todoList.markDone(index - 1)) {
+                        System.out.println("Task marked as done.");
+                    } else {
+                        System.out.println("No task with index " + index + ".");
+                    }
+                }
+                case "search" -> {
+                    if (argument.isEmpty()) {
+                        System.out.println("Usage: search <text>");
+                        continue;
+                    }
+                    List<Task> results = todoList.search(argument);
+                    if (results.isEmpty()) {
+                        System.out.println("No matches.");
+                    } else {
+                        for (int i = 0; i < results.size(); i++) {
+                            System.out.println((i + 1) + ". " + results.get(i));
                         }
                     }
                 }
