@@ -1,9 +1,12 @@
 plugins {
     id 'java'
+    id 'application'
+    id 'maven-publish'
+    id 'com.gradleup.shadow' version '9.6.1'
 }
 
 group = 'org.example'
-version = '1.0-SNAPSHOT'
+version = findProperty('version') ?: '0.1.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_23
@@ -18,6 +21,37 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+    mainClass = 'org.example.TodoApp'
+}
+
+shadowJar {
+    archiveBaseName = 'todo-app'
+    archiveClassifier = ''
+    archiveVersion = project.version.toString()
+    mergeServiceFiles()
+}
+
+tasks.jar {
+    enabled = false
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('startScripts') {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('distZip') {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('distTar') {
+    dependsOn tasks.named('shadowJar')
 }
 
 test {
